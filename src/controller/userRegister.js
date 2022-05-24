@@ -1,10 +1,8 @@
-const userModel = require("../../Project-05/models/userModel")
+const userModel = require("../models/userModel")
 const aws = require("aws-sdk");
 const bcrypt = require('bcrypt');
-const validators = require("../validators/validator")
-
+const validators = require("../validator/validator")
 const saltRounds = 10
-    //const uploadFile = require("../aws/aws")
 
 //////////////////////////////////////////AWS CONNECTION//////////////////////////////////////////////////////////////////////////////////////////////
 aws.config.update({
@@ -38,6 +36,10 @@ let uploadFile = async(file) => {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const isValidRequestBody = function(requestBody) {
+    return Object.keys(requestBody).length > 0;
+}
+
 
 const isValid = function(value) {
     if (typeof value === 'undefined' || value === null) return false
@@ -45,34 +47,58 @@ const isValid = function(value) {
     return true;
 }
 
+const isValidfiles = function(files) {
+    if (files && files.length > 0)
+        return true
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 createUser = async(req, res) => {
+
     try {
-        let files = req.files
-        let data = req.body
 
-        if (!Object.keys(data).length)
-            return res.status(400).send({ status: false, msg: "please enter data" })
 
-        if (!isValid(data.fname))
+        const data = JSON.parse(req.body.data)
+
+        const { fname, lname, email, phone, password, address, } = data
+
+
+        const files = req.files
+        if (!isValidfiles(files)) {
+            res.status(400).send({ status: false, Message: "Please provide profile picture" })
+            return
+        }
+
+        if (!isValidRequestBody(data))
+
+            return res.status(400).send({ status: false, msg: "Invalid data , Please enter data" })
+
+        if (!isValid(fname))
+
             return res.status(400).send({ status: false, msg: "please enter first name" })
 
-        if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.fname))
+        if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(fname))
+
             return res.status(400).send({ status: false, msg: "Please use valid type of name" })
 
 
 
-        if (!isValid(data.lname))
+        if (!isValid(lname))
+
             return res.status(400).send({ status: false, msg: "please enter last name" })
 
-        if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.lname))
+        if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(lname))
+
             return res.status(400).send({ status: false, msg: "Please use valid type of lname" })
 
 
 
-        if (!isValid(data.email))
+        if (!isValid(email))
+
+
             return res.status(400).send({ status: false, msg: "please enter email" })
 
-        if (!(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,20}$/).test(data.email)) {
+        if (!(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,20}$/).test(email)) {
             return res.status(400).send({ status: false, msg: "Please provide a email in correct format" })
         }
         let duplicateEmail = await userModel.findOne({ email: data.email })
@@ -82,10 +108,10 @@ createUser = async(req, res) => {
 
 
 
-        if (!isValid(data.phone))
+        if (!isValid(phone))
             return res.status(400).send({ status: false, msg: "please enter phone number " })
 
-        if (!(/^\d{10}$/).test(data.phone)) {
+        if (!(/^\d{10}$/).test(phone)) {
             return res.status(400).send({ status: false, msg: "please provide a valid phone Number" })
         }
 
@@ -94,10 +120,10 @@ createUser = async(req, res) => {
             return res.status(400).send({ status: false, msg: 'Phone already exists' })
         }
 
-        var profileImage = await uploadFile(files[0])
+        //var profileImage = await uploadFile(files[0])
 
 
-        if (!isValid(data.password)) {
+        if (!isValid(password)) {
             return res.status(400).send({ status: false, message: 'password is required' })
         }
 
@@ -106,62 +132,59 @@ createUser = async(req, res) => {
         }
 
 
-
-        // const salt = await bcrypt.genSalt(10);
-        // const hashed = await bcrypt.hash(password, salt);
-
-        // hashIt(password);
-        // // compare the password user entered with hashed pass.
-        // async function compareIt(password) {
-        //     const validPassword = await bcrypt.compare(password, hashedPassword);
-        // }
-        // compareIt(password);
-
-
-
-        if (!isValid(data.address)) {
+        if (!isValid(address)) {
             return res.status(400).send({ status: false, message: 'address is required' })
         }
-        if (data.address.shipping) {
-            if (!isValid(data.address.shipping.street)) {
-                return res.status(400).send({ status: false, message: 'street is required' })
+        if (address) {
+            if (address.shipping) {
+                if (!isValid(address.shipping.street)) {
+                    return res.status(400).send({ status: false, message: 'street is required' })
 
-            }
-            //address match with regex 
-            if ((!isValid(data.address.shipping.city)) || !(/^[a-zA-Z]*$/).test(address.city)) {
-                return res.status(400).send({ status: false, message: 'city is required' })
+                }
+                //address match with regex 
+                if ((!isValid(address.shipping.city)) || !(/^[a-zA-Z]*$/).test(address.city)) {
+                    return res.status(400).send({ status: false, message: 'city is required' })
 
-            }
-            //pincode match with regex
-            if ((!isValid(data.address.shipping.pincode)) || !(/^\d{6}$/).test(address.pincode)) {
-                return res.status(400).send({ status: false, message: 'Enter the pincode and only in 6 digits' })
+                }
+                //pincode match with regex
+                if (!isValid(address.shipping.pincode)) {
+                    return res.status(400).send({ status: false, message: 'Enter the pincode and only in 6 digits' })
+                }
             }
 
-            if (!isValid(data.address.billing.street)) {
-                return res.status(400).send({ status: false, message: 'street is required' })
+            if (address.billing) {
 
-            }
-            //address match with regex 
-            if ((!isValid(data.address.billing.city)) || !(/^[a-zA-Z]*$/).test(address.city)) {
-                return res.status(400).send({ status: false, message: 'city is required' })
+                if (!isValid(address.billing.street)) {
+                    return res.status(400).send({ status: false, message: 'street is required' })
 
-            }
-            //pincode match with regex
-            if ((!isValid(data.address.billing.pincode)) || !(/^\d{6}$/).test(address.pincode)) {
-                return res.status(400).send({ status: false, message: 'Enter the pincode and only in 6 digits' })
+                }
+                //address match with regex 
+                if ((!isValid(address.billing.city)) || !(/^[a-zA-Z]*$/).test(address.city)) {
+                    return res.status(400).send({ status: false, message: 'city is required' })
+
+                }
+                //pincode match with regex
+                if (!isValid(address.billing.pincode)) {
+                    return res.status(400).send({ status: false, message: 'Enter the pincode and only in 6 digits' })
+                }
             }
         }
 
-        // data["profileImage"] = profileImage
 
-        const profileImage = await uploadFile(files[0])
+        const profilePicture = await uploadFile(files[0])
 
         const encryptedPassword = await bcrypt.hash(password, saltRounds)
 
-        const data1 = { fname, lname, email, profileImage, phone, password, encryptedPassword, address }
-
-
-        let createuser = await userModel.create(data1)
+        const userData = {
+            fname: fname,
+            lname: lname,
+            profileImage: profilePicture,
+            email: email,
+            phone,
+            password: encryptedPassword,
+            address: address
+        }
+        let createuser = await userModel.create(userData)
         return res.status(201).send({ status: true, data: createuser })
 
 
@@ -171,6 +194,7 @@ createUser = async(req, res) => {
     }
 
 }
+
 
 module.exports.createUser = createUser
 
@@ -200,10 +224,18 @@ const login = async function(req, res) {
             return res.status(400).send({ status: false, message: "Email Doesn't exist" })
         }
 
+        const decryptedPassword = await bcrypt.compare(data.password, Email.password)
+
+        if (!decryptedPassword) {
+            return res.status(400).send({ status: false, message: "Password is incorrect" })
+        }
+
 
 
 
     } catch (error) {
-        return res.status(500).send({ status: false, message: error / message })
+        return res.status(500).send({ status: false, message: error.message })
     }
 }
+
+module.exports.login = login

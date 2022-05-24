@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const auth = async function(req, res, next) {
     try {
-        let token = req.headers['x-auth-key']
+        let token = req.headers['x-auth-key'].split(" ")
         if (!token) {
             return res.status(400).send({ status: false, message: "Token is required" })
         }
