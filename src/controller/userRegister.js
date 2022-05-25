@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const aws = require("aws-sdk");
 const bcrypt = require('bcrypt');
 const validators = require("../validator/validator")
+const mongoose = require('mongoose')
 const saltRounds = 10
 
 //////////////////////////////////////////AWS CONNECTION//////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,27 +241,43 @@ const login = async function(req, res) {
 }
 
 ///---------------------------------------------------GET-API---------------------------------------------------------------------------
+
 const getUser = async function(req, res) {
 
     try {
-        let userId = req.params
-        if (!userId) {
-            res.status(400).send({ status: false, message: "UserId must pe present" })
-        }
-        if (!mongoose.isValidObjectId(userId)) {
-            res.status(400).send({ status: false, message: "UserId must be valid" })
+        const userId = req.params.userId
+
+        if (!validators.isValidField(userId)) {
+
+            return res.status(400).send({ status: false, message: "UserId must pe present" })
         }
 
-        let findUser = await userModel.findbyId({ _id: userId })
+
+        if (!mongoose.isValidObjectId(userId)) {
+
+            return res.status(400).send({ status: false, message: "UserId must be valid" })
+        }
+
+        const findUser = await userModel.findById({ _id: userId })
+
+        if (!(req.userId === findUser.userId)) {
+
+            return res.status(400).send({ status: false, message: "Unauthorised access" })
+        }
+
         if (!findUser) {
-            res.status(400).send({ status: false, message: "user is not prsent" })
+
+            return res.status(400).send({ status: false, message: "user is not prsent" })
+
         } else {
-            res.status(200).send({ status: true, message: "data is given" })
+
+            return res.status(200).send({ status: true, message: "data is given", data: findUser })
         }
     } catch (error) {
-        return res.status(500).send({ status: false, message: err.message })
+        return res.status(500).send({ status: false, message: error.message })
     }
 }
+
 
 //------------------------------------------------------------PUT-API------------------------------------------------------------------
 

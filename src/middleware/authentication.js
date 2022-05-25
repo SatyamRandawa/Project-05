@@ -2,10 +2,13 @@ const jwt = require("jsonwebtoken");
 
 const auth = async function(req, res, next) {
     try {
-        let token = req.headers['x-auth-key'].split(" ")
-        if (!token) {
+        let bearer = req.headers['x-auth-key']
+        if (!bearer) {
             return res.status(400).send({ status: false, message: "Token is required" })
         }
+        const splitToken = bearer.split(" ");
+
+        const token = splitToken[1]
 
         let decodedToken = jwt.verify(token, 'Uranium-Project-5-Group-29');
 
