@@ -75,7 +75,7 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Invalid data , Please enter data" })
 
-//=======================================================FNAME VALIDATION================================================================================
+        //=======================================================FNAME VALIDATION================================================================================
 
         if (!isValid(fname))
 
@@ -85,7 +85,7 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Please use valid type of name" })
 
-//=======================================================LNAME VALIDATION================================================================================
+        //=======================================================LNAME VALIDATION================================================================================
 
 
         if (!isValid(lname))
@@ -96,7 +96,7 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Please use valid type of lname" })
 
-//=======================================================EMAIL VALIDATION================================================================================
+        //=======================================================EMAIL VALIDATION================================================================================
 
         if (!isValid(email))
 
@@ -111,7 +111,7 @@ const createUser = async(req, res) => {
             return res.status(400).send({ status: false, msg: 'email already exists' })
         }
 
-//=======================================================PHONE VALIDATION================================================================================
+        //=======================================================PHONE VALIDATION================================================================================
 
         if (!isValid(phone))
             return res.status(400).send({ status: false, msg: "please enter phone number " })
@@ -127,7 +127,7 @@ const createUser = async(req, res) => {
 
         //var profileImage = await uploadFile(files[0])
 
-//=======================================================PASSWORD VALIDATION================================================================================
+        //=======================================================PASSWORD VALIDATION================================================================================
 
         if (!isValid(password)) {
             return res.status(400).send({ status: false, message: 'password is required' })
@@ -137,7 +137,7 @@ const createUser = async(req, res) => {
             return res.status(400).send({ status: false, msg: "Please use first letter in uppercase, lowercase and number with min. 8 length" })
         }
 
-//=======================================================ADDRESS VALIDATION================================================================================
+        //=======================================================ADDRESS VALIDATION================================================================================
 
         if (!isValid(address)) {
             return res.status(400).send({ status: false, message: 'address is required' })
@@ -176,13 +176,13 @@ const createUser = async(req, res) => {
                 }
             }
         }
-//=======================================================HASH PASSWORD================================================================================
+        //=======================================================HASH PASSWORD================================================================================
 
-        
+
         const saltRounds = 10
         const encryptedPassword = await bcrypt.hash(password, saltRounds)
 
-//=======================================================CREATE USER================================================================================
+        //=======================================================CREATE USER================================================================================
 
         const profilePicture = await uploadFile(files[0])
         const userData = {
@@ -217,21 +217,21 @@ const login = async function(req, res) {
             return res.status(400).send({ status: false, message: "Data is Required" })
         }
 
-//=======================================================EMAIL VALIDATION================================================================================
+        //=======================================================EMAIL VALIDATION================================================================================
 
 
         if (!validators.isValidField(data.email)) {
             return res.status(400).send({ status: false, message: "Email Field is missing" })
         }
 
-//=======================================================PASSWORDD VALIDATION================================================================================
+        //=======================================================PASSWORDD VALIDATION================================================================================
 
 
         if (!validators.isValidField(data.password)) {
             return res.status(400).send({ status: false, message: "Password field is missing" })
         }
 
-//=======================================================AUNNTHENTICATION================================================================================
+        //=======================================================AUNNTHENTICATION================================================================================
 
 
         let Email = await userModel.findOne({ email: data.email })
@@ -264,7 +264,7 @@ const getUser = async function(req, res) {
     try {
         const userId = req.params.userId
 
-//=======================================================VALIDATION================================================================================
+        //=======================================================VALIDATION================================================================================
 
 
         if (!validators.isValidField(userId)) {
@@ -302,15 +302,15 @@ const getUser = async function(req, res) {
 /////////////////////////////////////////////////////////////////////PUT-API/////////////////////////////////////////////////////////////////////////
 
 
-updateProfile = async (req, res) => {
+const updateProfile = async(req, res) => {
     try {
-        
+
         const data = JSON.parse(req.body.data)
-       
+
         const files = req.files
         let Id = req.params.userId
 
-//=======================================================VALIDATION================================================================================
+        //=======================================================VALIDATION================================================================================
 
 
         if (!isValid(data))
@@ -332,13 +332,13 @@ updateProfile = async (req, res) => {
         // if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.fname))
         //     return res.status(400).send({ status: false, msg: "Please use valid type of fname" })
 
-//=======================================================LNAME VALIDATION================================================================================
+        //=======================================================LNAME VALIDATION================================================================================
 
 
         if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.lname))
             return res.status(400).send({ status: false, msg: "Please use valid type of lname" })
 
-//=======================================================EMAIL VALIDATION================================================================================
+        //=======================================================EMAIL VALIDATION================================================================================
 
 
         if (!(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,20}$/).test(data.email)) {
@@ -349,7 +349,7 @@ updateProfile = async (req, res) => {
             return res.status(400).send({ status: false, msg: 'email already exists' })
         }
 
-//=======================================================PHONE VALIDATION================================================================================
+        //=======================================================PHONE VALIDATION================================================================================
 
 
 
@@ -363,21 +363,21 @@ updateProfile = async (req, res) => {
         }
 
 
-//=======================================================HASH PASSWORD================================================================================
+        //=======================================================HASH PASSWORD================================================================================
 
 
         const saltRounds = 10
         const encryptedPassword = await bcrypt.hash(data.password, saltRounds)
 
-//==========================================================UPDATE=====================================================================================
+        //==========================================================UPDATE=====================================================================================
 
-        let updateprofile = await userModel.findByIdAndUpdate({_id:Id},{fname:data.fname, lname:data.lname, email:data.email,address:data.address,  phone:data.phone, password:encryptedPassword,profileImage:files.profileImage,}) 
-        return res.status(200).send({status:true, message:"User profile updated", data:updateprofile})
+        let updateprofile = await userModel.findByIdAndUpdate({ _id: Id }, { fname: data.fname, lname: data.lname, email: data.email, address: data.address, phone: data.phone, password: encryptedPassword, profileImage: files.profileImage, })
+        return res.status(200).send({ status: true, message: "User profile updated", data: updateprofile })
 
 
     } catch (error) {
         console.log(error)
-        return res.status(500).send({status:false, msg:error.message})
+        return res.status(500).send({ status: false, msg: error.message })
     }
 }
 
