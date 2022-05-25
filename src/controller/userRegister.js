@@ -1,4 +1,5 @@
 const userModel = require("../models/userModel")
+const jwt = require('jsonwebtoken')
 const aws = require("aws-sdk");
 const bcrypt = require('bcrypt');
 const validators = require("../validator/validator")
@@ -53,7 +54,7 @@ const isValidfiles = function(files) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-createUser = async(req, res) => {
+const createUser = async(req, res) => {
 
     try {
 
@@ -195,9 +196,6 @@ createUser = async(req, res) => {
 
 }
 
-
-module.exports.createUser = createUser
-
 //----------------------------------------------------------------LOG-In-API----------------------------------------------
 
 const login = async function(req, res) {
@@ -210,7 +208,7 @@ const login = async function(req, res) {
             return res.status(400).send({ status: false, message: "Data is Required" })
         }
 
-        if (!validators.isVaidField(data.email)) {
+        if (!validators.isValidField(data.email)) {
             return res.status(400).send({ status: false, message: "Email Field is missing" })
         }
 
@@ -230,12 +228,45 @@ const login = async function(req, res) {
             return res.status(400).send({ status: false, message: "Password is incorrect" })
         }
 
+        let userId = Email._id
 
+        let token = jwt.sign({ userId: userId }, "Uranium-Project-5-Group-29", { expiresIn: '1h' })
 
+        return res.status(201).send({ status: true, message: "Token Successfully created", data: token })
 
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message })
     }
 }
 
+///---------------------------------------------------GET-API---------------------------------------------------------------------------
+const getUser = async function(req, res) {
+
+    try {
+        let userId = req.params
+        if (!userId) {
+            res.status(400).send({ status: false, message: "UserId must pe present" })
+        }
+        if (!mongoose.isValidObjectId(userId)) {
+            res.status(400).send({ status: false, message: "UserId must be valid" })
+        }
+
+        let findUser = await userModel.findbyId({ _id: userId })
+        if (!findUser) {
+            res.status(400).send({ status: false, message: "user is not prsent" })
+        } else {
+            res.status(200).send({ status: true, message: "data is given" })
+        }
+    } catch (error) {
+        return res.status(500).send({ status: false, message: err.message })
+    }
+}
+
+//------------------------------------------------------------PUT-API------------------------------------------------------------------
+
+
+
+
+module.exports.createUser = createUser
 module.exports.login = login
+module.exports.getUser = getUser
