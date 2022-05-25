@@ -4,7 +4,7 @@ const aws = require("aws-sdk");
 const bcrypt = require('bcrypt');
 const validators = require("../validator/validator")
 const mongoose = require('mongoose')
-const saltRounds = 10
+
 
 //////////////////////////////////////////AWS CONNECTION//////////////////////////////////////////////////////////////////////////////////////////////
 aws.config.update({
@@ -36,7 +36,7 @@ let uploadFile = async(file) => {
     })
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////VALIDATIONS//////////////////////////////////////////////////////////////////////////////////////
 
 const isValidRequestBody = function(requestBody) {
     return Object.keys(requestBody).length > 0;
@@ -75,6 +75,8 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Invalid data , Please enter data" })
 
+//=======================================================FNAME VALIDATION================================================================================
+
         if (!isValid(fname))
 
             return res.status(400).send({ status: false, msg: "please enter first name" })
@@ -83,6 +85,7 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Please use valid type of name" })
 
+//=======================================================LNAME VALIDATION================================================================================
 
 
         if (!isValid(lname))
@@ -93,7 +96,7 @@ const createUser = async(req, res) => {
 
             return res.status(400).send({ status: false, msg: "Please use valid type of lname" })
 
-
+//=======================================================EMAIL VALIDATION================================================================================
 
         if (!isValid(email))
 
@@ -108,7 +111,7 @@ const createUser = async(req, res) => {
             return res.status(400).send({ status: false, msg: 'email already exists' })
         }
 
-
+//=======================================================PHONE VALIDATION================================================================================
 
         if (!isValid(phone))
             return res.status(400).send({ status: false, msg: "please enter phone number " })
@@ -124,6 +127,7 @@ const createUser = async(req, res) => {
 
         //var profileImage = await uploadFile(files[0])
 
+//=======================================================PASSWORD VALIDATION================================================================================
 
         if (!isValid(password)) {
             return res.status(400).send({ status: false, message: 'password is required' })
@@ -133,6 +137,7 @@ const createUser = async(req, res) => {
             return res.status(400).send({ status: false, msg: "Please use first letter in uppercase, lowercase and number with min. 8 length" })
         }
 
+//=======================================================ADDRESS VALIDATION================================================================================
 
         if (!isValid(address)) {
             return res.status(400).send({ status: false, message: 'address is required' })
@@ -171,12 +176,15 @@ const createUser = async(req, res) => {
                 }
             }
         }
+//=======================================================HASH PASSWORD================================================================================
 
-
-        const profilePicture = await uploadFile(files[0])
-
+        
+        const saltRounds = 10
         const encryptedPassword = await bcrypt.hash(password, saltRounds)
 
+//=======================================================CREATE USER================================================================================
+
+        const profilePicture = await uploadFile(files[0])
         const userData = {
             fname: fname,
             lname: lname,
@@ -197,7 +205,7 @@ const createUser = async(req, res) => {
 
 }
 
-//----------------------------------------------------------------LOG-In-API----------------------------------------------
+/////////////////////////////////////////////////////////////////LOG-In-API/////////////////////////////////////////////////////////////////////////
 
 const login = async function(req, res) {
 
@@ -209,13 +217,22 @@ const login = async function(req, res) {
             return res.status(400).send({ status: false, message: "Data is Required" })
         }
 
+//=======================================================EMAIL VALIDATION================================================================================
+
+
         if (!validators.isValidField(data.email)) {
             return res.status(400).send({ status: false, message: "Email Field is missing" })
         }
 
+//=======================================================PASSWORDD VALIDATION================================================================================
+
+
         if (!validators.isValidField(data.password)) {
             return res.status(400).send({ status: false, message: "Password field is missing" })
         }
+
+//=======================================================AUNNTHENTICATION================================================================================
+
 
         let Email = await userModel.findOne({ email: data.email })
 
@@ -240,12 +257,15 @@ const login = async function(req, res) {
     }
 }
 
-///---------------------------------------------------GET-API---------------------------------------------------------------------------
+////////////////////////////////////////////////////////////GET-API/////////////////////////////////////////////////////////////////////////////////
 
 const getUser = async function(req, res) {
 
     try {
         const userId = req.params.userId
+
+//=======================================================VALIDATION================================================================================
+
 
         if (!validators.isValidField(userId)) {
 
@@ -279,11 +299,92 @@ const getUser = async function(req, res) {
 }
 
 
-//------------------------------------------------------------PUT-API------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////PUT-API/////////////////////////////////////////////////////////////////////////
+
+
+updateProfile = async (req, res) => {
+    try {
+        
+        const data = JSON.parse(req.body.data)
+       
+        const files = req.files
+        let Id = req.params.userId
+
+//=======================================================VALIDATION================================================================================
+
+
+        if (!isValid(data))
+            return res.status(400).send({ status: false, msg: "Please enter data for update" })
+
+        if (!validators.isValidObjectId(Id))
+            return res.status(400).send({ status: false, msg: "enter valid user Id" })
+
+        let user = await userModel.findOne({ _id: Id })
+        if (!user)
+            return res.status(400).send({ status: false, msg: "user not found" })
+
+        if (!validators.isValidRequestBody(data))
+            return res.status(400).send({ status: false, msg: "provide detail to update" })
+
+        // if (!data.fname || data.lname || data.email || data.phone || files.profileImage || data.password || data.address)
+        //     return res.status(400).send({ status: false, mag: "please provide some data to update" })
+
+        // if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.fname))
+        //     return res.status(400).send({ status: false, msg: "Please use valid type of fname" })
+
+//=======================================================LNAME VALIDATION================================================================================
+
+
+        if (!(/^[a-zA-Z]+(\s[a-zA-Z]+)?$/).test(data.lname))
+            return res.status(400).send({ status: false, msg: "Please use valid type of lname" })
+
+//=======================================================EMAIL VALIDATION================================================================================
+
+
+        if (!(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,20}$/).test(data.email)) {
+            return res.status(400).send({ status: false, msg: "Please provide a email in correct format" })
+        }
+        let duplicateEmail = await userModel.findOne({ email: data.email })
+        if (duplicateEmail) {
+            return res.status(400).send({ status: false, msg: 'email already exists' })
+        }
+
+//=======================================================PHONE VALIDATION================================================================================
 
 
 
+        if (!(/^\d{10}$/).test(DATA.phone)) {
+            return res.status(400).send({ status: false, msg: "please provide a valid phone Number" })
+        }
+
+        let duplicatePhone = await userModel.findOne({ phone: data.phone })
+        if (duplicatePhone) {
+            return res.status(400).send({ status: false, msg: 'Phone already exists' })
+        }
+
+
+//=======================================================HASH PASSWORD================================================================================
+
+
+        const saltRounds = 10
+        const encryptedPassword = await bcrypt.hash(data.password, saltRounds)
+
+//==========================================================UPDATE=====================================================================================
+
+        let updateprofile = await userModel.findByIdAndUpdate({_id:Id},{fname:data.fname, lname:data.lname, email:data.email,address:data.address,  phone:data.phone, password:encryptedPassword,profileImage:files.profileImage,}) 
+        return res.status(200).send({status:true, message:"User profile updated", data:updateprofile})
+
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({status:false, msg:error.message})
+    }
+}
+
+
+//============================================================EXPORTS==================================================================================
 
 module.exports.createUser = createUser
 module.exports.login = login
 module.exports.getUser = getUser
+module.exports.updateProfile = updateProfile
