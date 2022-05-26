@@ -80,12 +80,12 @@ const createProduct = async function(req, res) {
         }
 
 
-        if (currencyId != INR) {
+        if (!(currencyId = INR)) {
 
             return res.status(400).send({ status: false, message: "Currency should be INR" })
         }
 
-        if (currencyFormat != "₹") {
+        if (!(currencyFormat = "₹")) {
 
             return res.status(400).send({ status: false, message: "CurrencyFormat Should be ₹" })
         }
