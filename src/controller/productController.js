@@ -1,9 +1,6 @@
 const productModel = require("../models/productModel")
-const uploadFile = require("../aws/aws.js")
-const jwt = require("jsonwebtoken")
-const bcrypt = require('bcrypt')
+const { uploadFile } = require("../aws/aws.js")
 const mongoose = require('mongoose')
-
 const validators = require("../validator/validator")
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +12,7 @@ const isValidfiles = function(files) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const createProduct = async function(req, res) {
+const createProduct = async(req, res) => {
 
     try {
 
@@ -80,12 +77,12 @@ const createProduct = async function(req, res) {
         }
 
 
-        if (!(currencyId = INR)) {
+        if (!(currencyId == "INR")) {
 
             return res.status(400).send({ status: false, message: "Currency should be INR" })
         }
 
-        if (!(currencyFormat = "₹")) {
+        if (!(currencyFormat == "₹")) {
 
             return res.status(400).send({ status: false, message: "CurrencyFormat Should be ₹" })
         }
@@ -106,7 +103,7 @@ const createProduct = async function(req, res) {
         let newAvailableSizes = []
 
         for (let i = 0; i < availableSizes.length; i++) {
-            newAvailableSizes.push(availableSizes[i].toUppercase().split(","))
+            newAvailableSizes.push(availableSizes[i].toUpperCase().split(","))
             if (!["S", "XS", "M", "X", "L", "XXL", "XL"].includes(availableSizes[i])) {
                 return res.status(400).send({ status: false, message: `Please provide size details in this form ${newAvailableSizes}` })
             }
@@ -130,13 +127,12 @@ const createProduct = async function(req, res) {
         const newProductData = await productModel.create(productData)
 
         return res.status(201).send({
-            status: false,
+            status: true,
             message: "Product created",
             data: newProductData
         })
     } catch (error) {
-        console.log(error)
-        return res.status(500).send({ status: false, msg: error.message })
+        return res.status(500).send({ status: false, message: error.message })
     }
 }
 
