@@ -123,7 +123,8 @@ const createProduct = async function(req, res) {
             isFreeShipping: isFreeShipping,
             style: style,
             installments: installments,
-            productImage: profilePicture
+            productImage: profilePicture,
+            availableSizes: newAvailableSizes
         }
 
         const newProductData = await productModel.create(productData)
