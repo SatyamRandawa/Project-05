@@ -14,7 +14,12 @@ const productSchema = new mongoose.schema({
         required: true,
         trim: true
     },
+    price: {
+        type: Number,
+        requires: true,
+        trim: true
 
+    },
     currencyId: {
         type: String,
         required: true,
@@ -26,7 +31,7 @@ const productSchema = new mongoose.schema({
         type: String,
         required: true,
         trim: true,
-        default: ""
+        default: "₹"
     },
 
     isFreeShipping: {

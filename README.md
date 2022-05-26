@@ -206,6 +206,7 @@ Send [form-data](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
 
 
 ## Products API (_No authentication required_)
+
 ### POST /products
 - Create a product document from request body.
 - Upload product image to S3 bucket and save image public url in document.
