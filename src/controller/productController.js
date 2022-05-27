@@ -136,4 +136,47 @@ const createProduct = async(req, res) => {
     }
 }
 
+
+
+
+//////////////////////////DELETE-PRODUCT-BY-ID-/////////////////////////////////
+
+const deleteProductById = async function(req, res) {
+
+    try {
+        let productId = req.params.productId
+
+        if (!validators.isValidField(productId)) {
+
+            res.status(400).send({ status: false, message: "productId must pe present" })
+        }
+
+        if (!mongoose.isValidObjectId(productId)) {
+
+            res.status(400).send({ status: false, message: "productId must be valid" })
+        }
+        let deleteProduct = await productModel.findById({ _id: productId, isDeleted: false })
+
+        if (!deleteProduct) {
+            res.status(400).send({ status: false, message: "Product is already deleted" })
+        }
+        // if (deleteProduct.userId != req.headers['x-auth-key']) {
+
+        //     res.status(401).send({ status: false, msg: "You don't have authority to delete this product." })
+        // }
+
+        const result = await productModel.findOneAndUpdate({ _id: productId, isDeleted: false }, {
+            isDeleted: true,
+            deletedAt: new Date()
+        }, { new: true })
+
+        res.status(200).send({ status: true, msg: "Successfully updated", data: result })
+    } catch (error) {
+        res.status(500).send({ status: false, message: error.message })
+    }
+}
+
+
 module.exports.createProduct = createProduct
+module.exports.deleteProductById = deleteProductById
+module.exports.deleteProductById = deleteProductById

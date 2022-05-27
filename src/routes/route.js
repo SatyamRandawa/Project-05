@@ -16,6 +16,7 @@ router.put("/user/:userId/profile", UserController.updateProfile)
 //===========================================PRODDUCT-FEATURE-2=================================================
 
 router.post("/products", ProductController.createProduct)
+router.delete("/products/:productId", ProductController.deleteProductById)
 
 
 
