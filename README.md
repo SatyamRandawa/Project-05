@@ -1,7 +1,7 @@
 #Uranium
 ## Project-29 - Products Management
 
-## Group Members---> Akarshika Singh , Sataym Randhawa, Prakash, Bolendra Moran
+## Group Members---> Akarshika Singh , Sataym Randhawa, Pankaj Kumar, Bolendra Moran
 
 ### Key points
 - In this project we will work feature wise. That means we pick one object like user, book, blog, etc at a time. We work through it's feature. The steps would be:
