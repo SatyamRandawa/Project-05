@@ -139,7 +139,7 @@ const createProduct = async(req, res) => {
 
 
 
-//////////////////////////DELETE-PRODUCT-BY-ID-/////////////////////////////////
+/////////////////////////////////////////////////////DELETE-PRODUCT-BY-ID-////////////////////////////////////////////////
 
 const deleteProductById = async function(req, res) {
 
@@ -176,7 +176,36 @@ const deleteProductById = async function(req, res) {
     }
 }
 
+/////////////////////////////////////////////////////GET-PRODUCT-BY-ID-////////////////////////////////////////////////
+
+const getProductByID = async(req, res) => {
+    try {
+        let productID = req.params.productId
+
+        if (!productID || productID.trim().length === 0) {
+            return res.status(400).send({ status: false, message: "product Id must be present " })
+        }
+
+
+        let findProduct = await productModel.findOne({ _id: productID })
+
+        if (!findProduct) {
+            return res.status(404).send({ status: false, message: "No product with this id exists" })
+        }
+
+        if (findProduct.isDeleted) {
+            return res.status(404).send({ status: false, message: "This product does not exists anymore" })
+        } else {
+            return res.status(200).send({ status: true, message: "success", data: findProduct })
+        }
+
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message })
+    }
+}
+
+
 
 module.exports.createProduct = createProduct
 module.exports.deleteProductById = deleteProductById
-module.exports.deleteProductById = deleteProductById
+module.exports.getProductByID = getProductByID
