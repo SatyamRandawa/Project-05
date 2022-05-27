@@ -112,16 +112,16 @@ const createProduct = async(req, res) => {
         const profilePicture = await uploadFile(files[0])
 
         const productData = {
-            title: title,
-            description: description,
+            title,
+            description,
             currencyId: currencyId,
-            price: price,
+            price,
             currencyFormat: currencyFormat,
-            isFreeShipping: isFreeShipping,
-            style: style,
-            installments: installments,
+            isFreeShipping,
+            style,
+            installments,
             productImage: profilePicture,
-            availableSizes: newAvailableSizes
+            availableSizes
         }
 
         const newProductData = await productModel.create(productData)
