@@ -87,7 +87,7 @@ const createOrder = async (req, res)=>{
         let orderData = {
             userId : userid,
             items : findCart.items,
-            totalPrices : findCart.totalPrices,
+            totalPrice : findCart.totalPrice,
             totalItems : findCart.totalItems,
             totalQuantity : totalQuantity,
             status : status,

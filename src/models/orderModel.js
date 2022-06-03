@@ -24,7 +24,7 @@ const orderSchema = new mongoose.Schema({
         }
     }],
 
-    totalPrices: {
+    totalPrice: {
         type: Number,
         required: true,
         comment: "Holds total price of all the items in the cart"
