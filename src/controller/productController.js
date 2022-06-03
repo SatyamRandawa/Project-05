@@ -5,7 +5,7 @@ const validators = require("../validator/validator")
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const isValidfiles = function(files) {
+const isValidfiles = function (files) {
     if (files && files.length > 0)
         return true
 }
@@ -16,15 +16,16 @@ const isValidRequestBody = function (requestBody) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const createProduct = async(req, res) => {
+const createProduct = async (req, res) => {
 
     try {
 
-        const data = JSON.parse(req.body.data)
+        const data = req.body
 
         const { title, description, currencyId, price, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
 
         const files = req.files
+        //===============================================VALIDATIONS=====================================================================================
 
         if (!isValidfiles(files)) {
             return res.status(400).send({ status: false, message: "Please Provide Profile Pictures" })
@@ -35,56 +36,85 @@ const createProduct = async(req, res) => {
             return res.status(400).send({ status: false, message: "Please Provide DATA" })
         }
 
+        //================================================TITLE VALIDATION====================================================================================
+
         if (!validators.isValidField(title)) {
 
             return res.status(400).send({ status: false, message: "Provde title field" })
         }
+        //================================================DESCRIPTION VALIDATION====================================================================================
+
 
         if (!validators.isValidField(description)) {
 
             return res.status(400).send({ status: false, message: "Provide Description field" })
         }
 
+        //================================================CURRENCYID VALIDATION====================================================================================
+
+
         if (!validators.isValidField(currencyId)) {
 
             return res.status(400).send({ status: false, message: "Provide currencyId field" })
         }
+
+        //================================================PRICE VALIDATION====================================================================================
+
 
         if (!validators.isValidField(price)) {
 
             return res.status(400).send({ status: false, message: "Provide price field" })
         }
 
+        //================================================CUR FORMAT VALIDATION====================================================================================
+
+
         if (!validators.isValidField(currencyFormat)) {
 
             return res.status(400).send({ status: false, message: "Provide currencyFormat field" })
         }
 
+        //================================================FREESHIPPING VALIDATION====================================================================================
+
+
         if (!validators.isValidField(isFreeShipping)) {
 
             return res.status(400).send({ status: false, message: "provide isFreeShipping field " })
         }
+        //================================================STYLE VALIDATION====================================================================================
+
 
         if (!validators.isValidField(style)) {
 
             return res.status(400).send({ status: false, message: "Provide style field" })
         }
 
+        //================================================SIZE VALIDATION====================================================================================
+
+
         if (!validators.isValidField(availableSizes)) {
 
             return res.status(400).send({ status: false, message: "Provide availableSizes field" })
         }
+
+        //================================================INSTALLMENT VALIDATION====================================================================================
+
 
         if (!validators.isValidField(installments)) {
 
             return res.status(400).send({ status: false, message: "Provide installments field" })
         }
 
+        //================================================CUR-ID VALIDATION====================================================================================
+
+
 
         if (!(currencyId == "INR")) {
 
             return res.status(400).send({ status: false, message: "Currency should be INR" })
         }
+
+        //================================================CUR-FORMAT VALIDATION====================================================================================
 
         if (!(currencyFormat == "₹")) {
 
@@ -93,17 +123,24 @@ const createProduct = async(req, res) => {
 
         const isTitlePresent = await productModel.findOne({ title: title });
 
+        //================================================UNIQUE TITLE VALIDATION====================================================================================
+
+
         if (isTitlePresent) {
 
             return res.status(400).send({ status: false, message: `${title} is already present` })
 
         }
 
+        //================================================SIZE VALIDATION====================================================================================
+
+
         if (availableSizes) {
             if (availableSizes.length == 0) {
                 return res.status(400).send({ status: false, message: "Provide Required Size" })
             }
         }
+
         let newAvailableSizes = []
 
         for (let i = 0; i < availableSizes.length; i++) {
@@ -112,6 +149,9 @@ const createProduct = async(req, res) => {
                 return res.status(400).send({ status: false, message: `Please provide size details in this form ${newAvailableSizes}` })
             }
         }
+
+//================================================SET DATA====================================================================================
+
 
         const profilePicture = await uploadFile(files[0])
 
@@ -127,6 +167,9 @@ const createProduct = async(req, res) => {
             productImage: profilePicture,
             availableSizes
         }
+
+    //================================================CREATE DATA====================================================================================
+
 
         const newProductData = await productModel.create(productData)
 
@@ -144,30 +187,37 @@ const createProduct = async(req, res) => {
 
 
 /////////////////////////////////////////////////////DELETE-PRODUCT-BY-ID-////////////////////////////////////////////////
-
-
-
-
 const getproduct = async (req, res) => {
     try {
         const queryParams = req.query
+        let { title, size ,priceSort  } = queryParams
         if (!isValidRequestBody(queryParams)) {
             // return all products that are not deleted and sort them in ascending
             let products = await productModel.find({ isDeleted: false }).sort({ "price": 1 })
             return res.status(200).send({ status: true, msg: 'all book list', data: products })
         }
 
-        
 
-        if (!(queryParams.availableSizes || queryParams.title || queryParams.price || queryParams.LT || queryParams.GT)) {
+
+        if (!(queryParams.size || queryParams.name || priceSort || queryParams.priceLessThan || queryParams.priceGreaterThan)) {
             return res.status(400).send({ status: false, msg: "query param detaile is required" })
         }
 
+        let filter = { "isDeleted": false }
+
+        if (queryParams.size ) filter.availableSizes = queryParams.size 
+        if (queryParams.name  ) filter.title = queryParams.name
+        if (queryParams.priceGreaterThan != null && queryParams.priceLessThan != null ) filter.price = { '$gt': queryParams.priceGreaterThan, "$lt": queryParams.priceLessThan }
+        if (queryParams.priceGreaterThan != null && queryParams.priceLessThan == null) filter.price = { $gt: queryParams.priceGreaterThan }
+        if (queryParams.priceLessThan != null && queryParams.priceGreaterThan == null) filter.price = { $lt: queryParams.priceLessThan }
+        //if (priceSort) filter.price = {$sort:priceSort}
+
+console.log(filter)
+        const product = await productModel.find(filter)
 
 
-        
-        const product = await productModel.find({ $and: [queryParams, { isDeleted: false }] }).sort({ "price": 1 })
-        if (product.length > 0) {
+
+        if (product.length) {
             return res.status(400).send({ status: true, count: product.length, msg: "product list", data: product })
         } else {
             return res.status(400).send({ status: false, msg: "No product found" })
@@ -181,6 +231,10 @@ const getproduct = async (req, res) => {
     }
 }
 
+
+
+
+
 ///////////////////////////////////////////////////UPDATE PRODUCT/////////////////////////////////////////////////////////////////////////////////
 
 const updateProduct = async (req, res) => {
@@ -192,9 +246,11 @@ const updateProduct = async (req, res) => {
         if (!(isValidRequestBody(data))) {
             return res.status(400).send({ status: false, msg: "please enter data to update" })
         }
+//================================================VALIDATION====================================================================================
 
-        if(!Object.keys(ID).length){
-            return res.status(400).send({status:false, msg:"please enter product ID to update"})
+
+        if (!Object.keys(ID).length) {
+            return res.status(400).send({ status: false, msg: "please enter product ID to update" })
         }
 
         const { title, description, currencyId, price, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
@@ -219,6 +275,8 @@ const updateProduct = async (req, res) => {
 
             return res.status(400).send({ status: false, message: "CurrencyFormat Should be ₹" })
         }
+//================================================SIZE VALIDATION====================================================================================
+
 
         let newAvailableSizes = []
 
@@ -235,13 +293,13 @@ const updateProduct = async (req, res) => {
             title: title, description: description,
             currencyId: currencyId, price: price, currencyFormat: currencyFormat,
             isFreeShipping: isFreeShipping, productImage: productImage, style: style, availableSizes: availableSizes, installments: installments
-        }, {new:true}) 
-        return res.status(200).send({status:false, msg:"Product Update Successfully", data:updateproduct})
+        }, { new: true })
+        return res.status(200).send({ status: false, msg: "Product Update Successfully", data: updateproduct })
 
 
     } catch (error) {
-         console.log(error)
-         return res.status(500).send({status:false, msg:error.message})
+        console.log(error)
+        return res.status(500).send({ status: false, msg: error.message })
     }
 
 }
@@ -249,7 +307,7 @@ const updateProduct = async (req, res) => {
 
 /////////////////////////////////////////////////////////DELETE PRODUCT////////////////////////////////////////////////////////////////////////////////
 
-const deleteProductById = async function(req, res) {
+const deleteProductById = async function (req, res) {
 
     try {
         let productId = req.params.productId
@@ -268,10 +326,6 @@ const deleteProductById = async function(req, res) {
         if (!deleteProduct) {
             res.status(400).send({ status: false, message: "Product is already deleted" })
         }
-        // if (deleteProduct.userId != req.headers['x-auth-key']) {
-
-        //     res.status(401).send({ status: false, msg: "You don't have authority to delete this product." })
-        // }
 
         const result = await productModel.findOneAndUpdate({ _id: productId, isDeleted: false }, {
             isDeleted: true,
@@ -286,7 +340,7 @@ const deleteProductById = async function(req, res) {
 
 /////////////////////////////////////////////////////GET-PRODUCT-BY-ID-////////////////////////////////////////////////
 
-const getProductByID = async(req, res) => {
+const getProductByID = async (req, res) => {
     try {
         let productID = req.params.productId
 
@@ -311,6 +365,8 @@ const getProductByID = async(req, res) => {
         return res.status(500).send({ status: false, message: error.message })
     }
 }
+
+
 
 
 
