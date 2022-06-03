@@ -14,7 +14,7 @@ const middleware = require('../middleware/authentication')
 
 router.post("/register", UserController.createUser)
 router.post("/login", UserController.login)
-router.get("/get/user/:userId" ,UserController.getUser)
+router.get("/get/user/:userId",middleware.auth ,UserController.getUser)
 router.put("/user/:userId/profile",middleware.auth,UserController.updateProfile)
 
 //===========================================PRODDUCT-FEATURE-2=================================================

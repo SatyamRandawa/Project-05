@@ -270,10 +270,13 @@ const login = async function(req, res) {
 const getUser = async function(req, res) {
 
     try {
-        const userId = req.params.userId
+        let userId = req.params.userId
 
         //=======================================================VALIDATION================================================================================
-
+        let user1 =  req.userId
+        if (userId !== user1) {
+            return res.status(401).send({ status: false, message: "Unauthorized access! Owner info doesn't match" });
+        }
 
         if (!validators.isValidField(userId)) {
 
@@ -288,7 +291,7 @@ const getUser = async function(req, res) {
 
         const findUser = await userModel.findById({ _id: userId })
 
-        if (!(req.userId === findUser.userId)) {
+        if (!(req.userId == userId)) {
 
             return res.status(400).send({ status: false, message: "Unauthorised access" })
         }
