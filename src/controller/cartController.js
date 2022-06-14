@@ -66,7 +66,7 @@ const createCartByUserID = async (req, res) => {
                     quantity: quantity,
                 }],
                
-                totalPrice:findPrice,
+                totalPrice:findPrice,  
                 totalItems:1
             }
             
@@ -334,7 +334,7 @@ const deleteCart = async function(req, res) {
 //=========================================================delete=============================================================================
         const deleteCart = await cartModel.findOneAndUpdate({ userId: userId }, { items: [], totalPrice: 0, totalItems: 0 }, { new: true })
 
-        res.status(200).send({ status: false, message: "Successfully deleted", data: deleteCart })
+       return res.status(200).send({ status: false, message: "Successfully deleted", data: deleteCart })
 
     } catch (error) {
 

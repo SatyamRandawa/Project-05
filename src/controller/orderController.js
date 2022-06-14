@@ -155,7 +155,7 @@ const updateOrders = async (req, res) => {
         let updateorder = await orderModel.findOneAndUpdate({userId:userid}, {$set:{status:orderStatus, updatedAt:Date.now()}}, {new:true})
         .select({"_id":1, "userId":1, "items":1, "totalPrice":1, "totalItems":1, "totalQuantity":1,
         "cancellable":1, "status":1, "createdAt":1, "updatedAt":1})
-        return res.status(400).send({status:true, msg:"status updated successfully", data:updateorder})
+        return res.status(200).send({status:true, msg:"status updated successfully", data:updateorder})
 
 
 

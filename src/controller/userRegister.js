@@ -121,7 +121,7 @@ const createUser = async (req, res) => {
             return res.status(400).send({ status: false, msg: "please enter phone number " })
 
         if (!(/^\d{10}$/).test(phone)) {
-            return res.status(400).send({ status: false, msg: `${phone} is not valid Indian  phone Number` })
+            return res.status(400).send({ status: false, msg: `  is not valid Indian  phone Number` })
         }
 
         let duplicatePhone = await userModel.findOne({ phone: data.phone })
@@ -248,7 +248,7 @@ const login = async function(req, res) {
         }
 
         const decryptedPassword = await bcrypt.compare(data.password, Email.password)
-
+  
         if (!decryptedPassword) {
             return res.status(400).send({ status: false, message: "Password is incorrect" })
         }
@@ -264,6 +264,7 @@ const login = async function(req, res) {
         return res.status(500).send({ status: false, message: error.message })
     }
 }
+
 
 ////////////////////////////////////////////////////////////GET-API/////////////////////////////////////////////////////////////////////////////////
 
@@ -320,7 +321,7 @@ const updateProfile = async(req, res) => {
 
         const files = req.files
         let Id = req.params.userId
-        const address = JSON.parse(req.body.address)
+        const address = JSON.stringify(req.body.address)
 
 
 
@@ -372,8 +373,8 @@ const updateProfile = async(req, res) => {
 
 
 
-        if (!(/^\d{10}$/).test(data.phone)) {
-            return res.status(400).send({ status: false, msg: "please provide a valid phone Number" })
+        if (!(/^\d{10}$/).test(phone)) {
+             res.status(400).send({ status: false, msg: "please provide a valid phone Number" })
         }
 
         let duplicatePhone = await userModel.findOne({ phone: data.phone })
@@ -384,9 +385,7 @@ const updateProfile = async(req, res) => {
 
         //=======================================================ADDRESS VALIDATION================================================================================
 
-        if (!isValid(address)) {
-            return res.status(400).send({ status: false, message: 'address is required' })
-        }
+        
         if (address) {
             if (address.shipping) {
                 if (!isValid(address.shipping.street)) {

@@ -187,108 +187,137 @@ const createProduct = async (req, res) => {
 
 
 /////////////////////////////////////////////////////DELETE-PRODUCT-BY-ID-////////////////////////////////////////////////
-const getproduct = async (req, res) => {
+const getproduct = async function (req, res) {
     try {
-        const queryParams = req.query
-        let { title, size ,priceSort  } = queryParams
-        if (!isValidRequestBody(queryParams)) {
-            // return all products that are not deleted and sort them in ascending
-            let products = await productModel.find({ isDeleted: false }).sort({ "price": 1 })
-            return res.status(200).send({ status: true, msg: 'all book list', data: products })
-        }
+        let query = req.query
+        if (!validation.validBody(query)) {
 
+            const datafound = await productModel.find({ isDeleted: false })
+            if (!datafound) {
+                return res.status(404).send({ status: false, message: 'Product not exist' })
+            }
+            return res.status(200).send({ status: true, message: "Get Products details", data: datafound })
 
-
-        if (!(queryParams.size || queryParams.name || priceSort || queryParams.priceLessThan || queryParams.priceGreaterThan)) {
-            return res.status(400).send({ status: false, msg: "query param detaile is required" })
-        }
-
-        let filter = { "isDeleted": false }
-
-        if (queryParams.size ) filter.availableSizes = queryParams.size 
-        if (queryParams.name  ) filter.title = queryParams.name
-        if (queryParams.priceGreaterThan != null && queryParams.priceLessThan != null ) filter.price = { '$gt': queryParams.priceGreaterThan, "$lt": queryParams.priceLessThan }
-        if (queryParams.priceGreaterThan != null && queryParams.priceLessThan == null) filter.price = { $gt: queryParams.priceGreaterThan }
-        if (queryParams.priceLessThan != null && queryParams.priceGreaterThan == null) filter.price = { $lt: queryParams.priceLessThan }
-        //if (priceSort) filter.price = {$sort:priceSort}
-
-console.log(filter)
-        const product = await productModel.find(filter)
-
-
-
-        if (product.length) {
-            return res.status(200).send({ status: true, count: product.length, msg: "product list", data: product })
         } else {
-            return res.status(400).send({ status: false, msg: "No product found" })
+            const { size, name, priceGreaterThan, priceLessThan } = query
+
+            let filter = {}
+
+            if (!(size || name || priceGreaterThan || priceLessThan)) {
+                return res.status(400).send({ status: false, message: 'provide valid filter' })
+            }
+            if (size) {
+
+                if (!(["S", "XS", "M", "X", "L", "XXL", "XL"].includes(size))) {
+                    return res.status(400).send({ staus: false, message: "Pleage enter valid size" })
+                }
+                filter.availableSizes = size;
+            }
+            if (name) {
+                if (!validation.isValid(name)) {
+                    return res.status(400).send({ status: false, message: "Product name is required" })
+                }
+                filter.title = { $regex: name, $options: 'i' };
+            }
+            if (priceGreaterThan) {
+                if (!validation.isValid(priceGreaterThan)) {
+                    return res.status(400).send({ status: false, message: "priceGreaterThan is required" })
+                }
+                if (!/^[0-9]*$/.test(priceGreaterThan)) {
+                    return res.status(400).send({ status: false, message: "please enter number value" })
+                }
+                filter.price = { $gt: priceGreaterThan };
+            }
+            if (priceLessThan) {
+                if (!validation.isValid(priceLessThan)) {
+                    return res.status(400).send({ status: false, message: "priceLessThan is required" })
+                }
+                if (!/^[0-9]*$/.test(priceLessThan)) {
+                    return res.status(400).send({ status: false, message: "please enter number value" })
+                }
+                filter.price = { $lt: priceLessThan };
+            }
+            const getdata = await productModel.find({ $and: [{ isDeleted: false }, filter] }).sort({ "price": 1 })
+            if (getdata.length > 0) {
+                return res.status(200).send({ staus: true,message:"Success", data: getdata })
+            } else {
+                return res.status(404).send({ status: false, message: 'Product not exist' })
+            }
         }
 
-
-    } catch (error) {
-        console.log(error)
-        return res.status(500).send({ status: false, msg: error.message })
-
+    }
+    catch (err) {
+        return res.status(500).send({ status: false, error: err.message })
     }
 }
 
+/////////////////////////////////////////////////////////Update ById////////////////////////////////////////////////////////////////////
 
-
-
-
-///////////////////////////////////////////////////UPDATE PRODUCT/////////////////////////////////////////////////////////////////////////////////
-
-const updateProduct = async (req, res) => {
+const updateProduct = async function (req, res) {
     try {
-
-        const data = req.body
-        let ID = req.params.productId
-        const files = req.files
-        if (!(isValidRequestBody(data))) {
-            return res.status(400).send({ status: false, msg: "please enter data to update" })
+        let id = req.params.productId
+        let data = req.body
+        let files = req.files
+        const { title, description, price, productImage, isFreeShipping, style, installments, availableSizes } = data
+        if (!validation.validObjectId(id)) {
+            return res.status(400).send({ status: false, message: "not a valid onjectId" })
         }
-//================================================VALIDATION====================================================================================
-
-
-        if (!Object.keys(ID).length) {
-            return res.status(400).send({ status: false, msg: "please enter product ID to update" })
-        }
-
-        let product = await productModel.findOne({ _id: ID, isDeleted: false })
+        let product = await productModel.findOne({ _id: id, isDeleted: false })
         if (!product) {
             return res.status(404).send({ status: false, message: "no product found with this id" })
         }
-
-        const { title, description, currencyId, price, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
-
-        const findproduct = await productModel.findOne({ _id: ID }, { isDeleted: false })
-        if (!findproduct) {
-            return res.status(404).send({ status: false, msg: "Product not found or might be Deleted" })
+        if (!validation.validBody(data)) {
+            return res.status(400).send({ status: false, message: "please provide data to update" })
+        }
+        if ((title && !validation.isValid(title)) || title == "") {
+            return res.status(400).send({ status: false, message: "please enter title" })
+        }
+        let sameTitle = await productModel.findOne({ title })
+        if (sameTitle) {
+            return res.status(400).send({ status: false, message: " title is already used" })
         }
 
-        const UniqueTitle = await productModel.findOne({ title: title })
-        if (UniqueTitle) {
-            return res.status(400).send({ status: false, msg: "This title already exist please try something unique" })
+        if ((description && !validation.isValid(description)) || description == "") {
+            return res.status(400).send({ status: false, message: "please enter description" })
         }
+        if ((price && !validation.isValid(price)) || price == "") {
+            return res.status(400).send({ status: false, message: "please enter price" })
+        }
+    
+        if (price && (price < 0 || !/\d/.test(price))) {
+            return res.status(400).send({ status: false, message: "enter Price" })
+        }
+
+        if (availableSizes &&  !validation.isValid(availableSizes) ||availableSizes == "") {
+            return res.status(400).send({ status: false, message: "Add Sizes" })
+        }
+
         if (availableSizes && ! /(S|XS|M|X|L|XXL|XL)$/.test(availableSizes)) {
             return res.status(400).send({ status: false, message: "Sizes only includes ['S', 'XS','M','X', 'L','XXL', 'XL']" })
         }
 
-        
-//================================================SIZE VALIDATION====================================================================================
+        if (installments && (!validation.isValid(installments)) || installments == "") {
+            return res.status(400).send({ status: false, message: "please enter installments" })
+        }
+        if (style && (!validation.isValid(style) || !/\w/.test(style))) {
+            return res.status(400).send({ status: false, message: "enter style" })
+        }
 
+        if (isFreeShipping && (!validation.isValid(isFreeShipping) || !/true|false/.test(isFreeShipping))) {
+            return res.status(400).send({ status: false, message: "enter is FreeShipping" })
+        }
 
-        
+        if (files && files.length > 0) {
+            let uploadedFileURL = await validation.uploadFile(files[0])
+            productImage = uploadedFileURL
+        }
 
-        //const productImage = await uploadFile(files[0])
-
-        let updateData = await productModel.findByIdAndUpdate({ _id: ID }, data, { new: true })
+        let updateData = await productModel.findByIdAndUpdate({ _id: id }, data, { new: true })
         return res.status(200).send({ status: true, message: "successfully updates", data: updateData })
-    
-    } catch (error) {
-        console.log(error)
-        return res.status(500).send({ status: false, msg: error.message })
     }
-
+    catch (err) {
+        return res.status(500).send({ status: false, error: err.message })
+    }
 }
 
 
@@ -338,7 +367,7 @@ const getProductByID = async (req, res) => {
         }
 
 
-        let findProduct = await productModel.findOne({ _id: productID })
+        let findProduct = await productModel.findOne({ _id: productID }, {isDeleted:false})
 
         if (!findProduct) {
             return res.status(404).send({ status: false, message: "No product with this id exists" })
